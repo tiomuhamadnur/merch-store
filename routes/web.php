@@ -1,35 +1,35 @@
 <?php
 
-use App\Livewire\Settings\Appearance;
-use App\Livewire\Settings\Password;
-use App\Livewire\Settings\Profile;
-use App\Livewire\Settings\TwoFactor;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
+use App\Http\Controllers\RolesController;
+use App\Http\Controllers\UsersControllers;
+use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CategoriesController;
+
+Auth::routes();
 
 Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+    return redirect('login');
+})->middleware('guest');
+Route::get('/', function () {
+    return redirect('dashboard');
+})->middleware('auth');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::group(['middleware' => 'auth'], function () {
 
-Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', 'settings/profile');
+    Route::resource('/dashboard', DashboardController::class);
 
-    Route::get('settings/profile', Profile::class)->name('profile.edit');
-    Route::get('settings/password', Password::class)->name('user-password.edit');
-    Route::get('settings/appearance', Appearance::class)->name('appearance.edit');
+    Route::resource('/products', ProductsController::class);
 
-    Route::get('settings/two-factor', TwoFactor::class)
-        ->middleware(
-            when(
-                Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-                ['password.confirm'],
-                [],
-            ),
-        )
-        ->name('two-factor.show');
+    Route::resource('/categories', CategoriesController::class);
+
+    Route::resource('/settings', SettingsController::class);
+
+    Route::resource('/roles', RolesController::class);
+
+    Route::resource('/users', UsersControllers::class);
+
 });
